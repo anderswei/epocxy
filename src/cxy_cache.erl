@@ -333,7 +333,8 @@ delete_item(Cache_Name, Key) ->
     end.
     
 %% Remove matched items from both new and old generations, returns true if at least one value was deleted.
-match_delete_item(Cache_Name, Match_Spec) ->
+match_delete_item(Cache_Name, Match_Key) ->
+    Match_Spec = {'_', Match_Key, '_', '_'},
     case ?GET_METADATA(Cache_Name) of
         [] -> return_cache_delete(Cache_Name, false);
         [#cxy_cache_meta{new_gen=New_Gen_Id, old_gen=Old_Gen_Id}] ->
