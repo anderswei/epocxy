@@ -44,6 +44,7 @@
          info/0,    info/1,
          replace_check_generation_fun/2,
          delete_item/2,  fetch_item/2,
+         match_delete_item/2,
          refresh_item/2, refresh_item/3,
          fetch_item_version/2,
          is_cached/2,
@@ -309,6 +310,7 @@ replace_check_generation_fun(Cache_Name, Fun)
 %%%------------------------------------------------------------------------------
 
 -spec delete_item  (cache_name(), cached_key()) -> true.
+-spec match_delete_item  (cache_name(), ets:match_spec()) -> true.
 -spec fetch_item   (cache_name(), cached_key()) -> cached_value() | no_value_available | {error, tuple()}.
 -spec refresh_item (cache_name(), cached_key()) -> cached_value() | no_value_available | {error, tuple()}.
 -spec refresh_item (cache_name(), cached_key(), {cached_value_vsn(), cached_value()})
@@ -327,6 +329,17 @@ delete_item(Cache_Name, Key) ->
             %% Delete from new generation first is safest during a generation change.
             Deleted_New = ?WHEN_GEN_EXISTS(New_Gen_Id, ets:delete(New_Gen_Id, Key)),
             Deleted_Old = ?WHEN_GEN_EXISTS(Old_Gen_Id, ets:delete(Old_Gen_Id, Key)),
+            return_cache_delete(Cache_Name, Deleted_New or Deleted_Old)
+    end.
+    
+%% Remove matched items from both new and old generations, returns true if at least one value was deleted.
+match_delete_item(Cache_Name, Match_Spec) ->
+    case ?GET_METADATA(Cache_Name) of
+        [] -> return_cache_delete(Cache_Name, false);
+        [#cxy_cache_meta{new_gen=New_Gen_Id, old_gen=Old_Gen_Id}] ->
+            %% Delete from new generation first is safest during a generation change.
+            Deleted_New = ?WHEN_GEN_EXISTS(New_Gen_Id, ets:match_delete(New_Gen_Id, Match_Spec)),
+            Deleted_Old = ?WHEN_GEN_EXISTS(Old_Gen_Id, ets:match_delete(Old_Gen_Id, Match_Spec)),
             return_cache_delete(Cache_Name, Deleted_New or Deleted_Old)
     end.
 
