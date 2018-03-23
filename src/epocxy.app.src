@@ -6,7 +6,7 @@
 {application, epocxy,
  [
   {id, "epocxy"},
-  {vsn, "1.0.1"},
+  {vsn, "1.0.2"},
   {description, "Erlang Patterns of Concurrency"},
   {modules,      [
                   ets_buffer,

@@ -8,3 +8,5 @@ logs
 *.plt
 *~
 .erlang.mk.packages.*
+.idea
+*.iml

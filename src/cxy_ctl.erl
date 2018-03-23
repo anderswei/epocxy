@@ -534,7 +534,7 @@ internal_execute_pid(Task_Type, Mod, Fun, Args, Spawn_Type, Over_Limit_Action, D
                 refuse -> decr_active_procs(Task_Type),
                           {max_pids, Max};
                 inline -> _ = setup_local_process_dictionary(Dict_Props),
-                          {inline, execute_wrapper(Mod, Fun, Args, Task_Type, Max_History, Start, inline, [])}
+                          {inline, execute_wrapper(Mod, Fun, Args, Task_Type, Max_History, Start, inline, Dict_Props)}
             end
     end.
 
@@ -576,7 +576,7 @@ execute_wrapper(Mod, Fun, Args, Task_Type, _Max_History, false, Spawn_Or_Inline,
              after decr_active_procs(Task_Type)
              end,
     case Result of
-        {error, Call_Data} -> fail_wrapper(Spawn_Or_Inline, Call_Data, erlang:get_stacktrace());
+        {error, Call_Data} -> fail_wrapper(Spawn_Or_Inline, apply_calldata_options(Call_Data, Dict_Prop_Pairs), erlang:get_stacktrace());
         Result             -> Result
     end;
 
@@ -596,7 +596,7 @@ execute_wrapper(Mod, Fun, Args, Task_Type, Max_History, Start, Spawn_Or_Inline, 
                  end
              end,
     case Result of
-        {error, Call_Data} -> fail_wrapper(Spawn_Or_Inline, Call_Data, erlang:get_stacktrace());
+        {error, Call_Data} -> fail_wrapper(Spawn_Or_Inline, apply_calldata_options(Call_Data, Dict_Prop_Pairs), erlang:get_stacktrace());
         Result             -> Result
     end.
 
@@ -604,6 +604,14 @@ execute_wrapper(Mod, Fun, Args, Task_Type, Max_History, Start, Spawn_Or_Inline, 
 fail_wrapper(spawn,  Call_Data, Stacktrace) -> erlang:error(spawn_failure,  [Call_Data, Stacktrace]);
 fail_wrapper(inline, Call_Data, Stacktrace) -> exit       ({inline_failure, [Call_Data, Stacktrace]}).
 
+apply_calldata_options(CallData, Opts) ->
+    case proplists:get_value(sanitize_fn, Opts) of
+        Fn when is_function(Fn) ->
+            apply(Fn, CallData);
+
+        undefined ->
+            CallData
+    end.
 
 %% @doc
 %%    Provide a list of the registered concurrency limit types and their corresponding limit
