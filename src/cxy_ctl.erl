@@ -534,7 +534,11 @@ internal_execute_pid(Task_Type, Mod, Fun, Args, Spawn_Type, Over_Limit_Action, D
                 refuse -> decr_active_procs(Task_Type),
                           {max_pids, Max};
                 inline -> _ = setup_local_process_dictionary(Dict_Props),
-                          {inline, execute_wrapper(Mod, Fun, Args, Task_Type, Max_History, Start, inline, Dict_Props)}
+                          Norm_Dict_Props = case Dict_Props of
+                                                L when is_list(L) -> L;
+                                                _Other            -> []
+                                            end,
+                          {inline, execute_wrapper(Mod, Fun, Args, Task_Type, Max_History, Start, inline, Norm_Dict_Props)}
             end
     end.
 
