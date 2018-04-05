@@ -611,7 +611,7 @@ fail_wrapper(inline, Call_Data, Stacktrace) -> exit       ({inline_failure, [Cal
 apply_calldata_options(CallData, Opts) ->
     case proplists:get_value(sanitize_fn, Opts) of
         Fn when is_function(Fn) ->
-            apply(Fn, CallData);
+            apply(Fn, [CallData]);
 
         undefined ->
             CallData
