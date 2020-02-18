@@ -145,7 +145,7 @@ validate_create_and_fetch(Cache_Name, Cache_Obj_Type, Obj_Record_Type, Obj_Insta
 
     %% First time creates new value (fetch_count always indicates next access count)...
     false = ?TM:is_cached(Cache_Name, Obj_Instance_Key),
-    Before_Obj_Insert = erlang:now(),
+    Before_Obj_Insert = erlang:timestamp(),
     {Obj_Record_Type, Obj_Instance_Key} = ?TM:fetch_item(Cache_Name, Obj_Instance_Key),
     [] = ets:lookup(Old, Obj_Instance_Key),
     [#cxy_cache_value{key=Obj_Instance_Key, version=Obj_Create_Time,
@@ -336,7 +336,7 @@ vr_force_obj_refresh(_Config) ->
 
     %% Test refreshing a missing item...
     ct:comment("Refresh a missing object with a new object in cache: ~p", [Cache_Name]),
-    Exact_Version  = erlang:now(),
+    Exact_Version  = erlang:timestamp(),
     Exact_Key      = "missing-frog",
     Exact_Object   = {frog, Exact_Key},
     Exact_Object   = refresh(obj, Cache_Name, Exact_Key, {Exact_Version, Exact_Object}),
@@ -344,7 +344,7 @@ vr_force_obj_refresh(_Config) ->
 
     %% Test refreshing an already present item...
     ct:comment("Refresh an existing object with a new object in cache: ~p", [Cache_Name]),
-    validate_force_refresh(obj, Cache_Name, frog, "frog-with-spots", erlang:now()),
+    validate_force_refresh(obj, Cache_Name, frog, "frog-with-spots", erlang:timestamp()),
 
     %% Remove cache and complete test.
     eliminate_cache(Cache_Name),
@@ -359,7 +359,7 @@ vr_force_key_refresh(_Config) ->
     Cache_Obj_Type = frog_obj,
     ct:comment("Put a single item into new cache: ~p", [Cache_Name]),
     reserve_and_create_cache(Cache_Name, Cache_Obj_Type, 3),
-    validate_force_refresh(key, Cache_Name, frog, "frog-without-spots", erlang:now()),
+    validate_force_refresh(key, Cache_Name, frog, "frog-without-spots", erlang:timestamp()),
 
     %% Remove cache and complete test.
     eliminate_cache(Cache_Name),
@@ -374,7 +374,7 @@ validate_force_refresh(Type, Cache_Name, Obj_Record_Type, Obj_Instance_Key, Old_
 
     %% Now refresh it to a newer version...
     ct:comment("Refreshing to a newer version in cache: ~p", [Cache_Name]),
-    New_Time      = erlang:now(),
+    New_Time      = erlang:timestamp(),
     true          = timer:now_diff(New_Time, Frog_Version_1) > 0,
     Expected_Frog = refresh(Type, Cache_Name, Obj_Instance_Key, {New_Time, Expected_Frog}),
     Expected_Frog = ?TM:fetch_item(Cache_Name, Obj_Instance_Key),
@@ -403,7 +403,7 @@ validate_force_refresh(Type, Cache_Name, Obj_Record_Type, Obj_Instance_Key, Old_
     Expected_Frog = ?TM:fetch_item(Cache_Name, Obj_Instance_Key),
     Expected_Frog = ?TM:fetch_item(Cache_Name, Obj_Instance_Key),
     true = ?TM:maybe_make_new_generation(Cache_Name),
-    Newer_Time = erlang:now(),
+    Newer_Time = erlang:timestamp(),
     Expected_Frog = refresh(Type, Cache_Name, Obj_Instance_Key, {Newer_Time, Expected_Frog}),
     true = check_version(Type, Cache_Name, Obj_Instance_Key, Newer_Time),
     

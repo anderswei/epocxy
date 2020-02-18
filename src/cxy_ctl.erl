@@ -573,15 +573,14 @@ get_calling_dictionary_values([], Props) -> Props.
 
 %% If Start is 'false', we don't want to record elapsed time history...
 execute_wrapper(Mod, Fun, Args, Task_Type, _Max_History, false, Spawn_Or_Inline, Dict_Prop_Pairs) ->
-    Result = try
-                 _ = [put(Key, Val) || {Key, Val} <- Dict_Prop_Pairs],
-                 apply(Mod, Fun, Args)
-             catch Error:Type -> {error, {mfa_failure, {{Error, Type}, {Mod, Fun, Args}, Task_Type, Spawn_Or_Inline}}}
-             after decr_active_procs(Task_Type)
-             end,
-    case Result of
-        {error, Call_Data} -> fail_wrapper(Spawn_Or_Inline, apply_calldata_options(Call_Data, Dict_Prop_Pairs), erlang:get_stacktrace());
-        Result             -> Result
+    try
+        _ = [put(Key, Val) || {Key, Val} <- Dict_Prop_Pairs],
+        apply(Mod, Fun, Args)
+    catch Error:Type:Trace ->
+        Call_Data = {mfa_failure, {{Error, Type}, {Mod, Fun, Args}, Task_Type, Spawn_Or_Inline}},
+        fail_wrapper(Spawn_Or_Inline, apply_calldata_options(Call_Data, Dict_Prop_Pairs), Trace)
+    after
+        decr_active_procs(Task_Type)
     end;
 
 %% Otherwise, we incur the overhead cost of recording elapsed time history.
